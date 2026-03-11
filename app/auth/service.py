@@ -1,6 +1,7 @@
 import random
 from datetime import datetime, timedelta
 from flask_jwt_extended import create_access_token
+from sqlalchemy import text
 from app.extensions import db, bcrypt
 from app.models import OTPVerification
 from app.utils.email import send_email
@@ -14,6 +15,7 @@ def generate_otp():
 
 
 def send_otp_service(email):
+
     # Delete old OTPs for this email
     OTPVerification.query.filter_by(email=email).delete()
 
@@ -44,6 +46,7 @@ def send_otp_service(email):
 
 
 def verify_otp_service(email, otp_input):
+
     otp_entry = OTPVerification.query.filter_by(email=email).first()
 
     if not otp_entry:
@@ -64,7 +67,26 @@ def verify_otp_service(email, otp_input):
     db.session.delete(otp_entry)
     db.session.commit()
 
-    access_token = create_access_token(identity=email)
+    # 🔹 Fetch company_id from users table
+    result = db.session.execute(
+        text("SELECT company_id FROM users WHERE email = :email"),
+        {"email": email}
+    )
+
+    user = result.fetchone()
+
+    if not user:
+        return {"error": "User not registered"}, 404
+
+    company_id = user.company_id
+
+    # 🔹 Create JWT token with company_id
+    access_token = create_access_token(
+        identity=email,
+        additional_claims={
+            "company_id": company_id
+        }
+    )
 
     return {
         "message": "Login successful",
