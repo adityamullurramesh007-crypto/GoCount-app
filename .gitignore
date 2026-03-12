@@ -1,12 +1,18 @@
-# Environment variables
-.env
-
-# Python cache
+# Python
+venv/
 __pycache__/
 *.pyc
 
-# Virtual environment
-venv/
+# Environment
+.env
 
-# OS files
+# Uploads
+uploads/
+
+# Angular
+node_modules/
+dist/
+
+# OS
 .DS_Store
+Thumbs.db
